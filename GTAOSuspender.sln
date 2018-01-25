@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTAOSuspender", "GTAOSuspender\GTAOSuspender.csproj", "{B7AF9D87-F8C7-43D1-9D41-C35480168F93}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7AF9D87-F8C7-43D1-9D41-C35480168F93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7AF9D87-F8C7-43D1-9D41-C35480168F93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7AF9D87-F8C7-43D1-9D41-C35480168F93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7AF9D87-F8C7-43D1-9D41-C35480168F93}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {77E3EF69-23C0-4634-B990-CC30B0E7AE3C}
+	EndGlobalSection
+EndGlobal
