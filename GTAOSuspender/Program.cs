@@ -1,28 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace GTAOSuspender
 {
-    class Program
+    public static class Program
     {
         [DllImport("kernel32.dll")]
-        static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+        private static extern IntPtr OpenThread(int dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
 
         [DllImport("kernel32.dll")]
-        static extern uint SuspendThread(IntPtr hThread);
+        private static extern uint SuspendThread(IntPtr hThread);
 
         [DllImport("kernel32.dll")]
-        static extern int ResumeThread(IntPtr hThread);
+        private static extern int ResumeThread(IntPtr hThread);
 
         [DllImport("kernel32", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern bool CloseHandle(IntPtr handle);
+        private static extern bool CloseHandle(IntPtr handle);
 
-        static void SuspendProcess(int pid)
+        private static void Suspend(this Process process)
         {
-            var process = Process.GetProcessById(pid);
-
             if (string.IsNullOrEmpty(process.ProcessName))
             {
                 return;
@@ -30,7 +30,7 @@ namespace GTAOSuspender
 
             foreach (ProcessThread pT in process.Threads)
             {
-                IntPtr pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
+                var pOpenThread = OpenThread(2, false, (uint)pT.Id);
 
                 if (pOpenThread == IntPtr.Zero)
                 {
@@ -42,10 +42,8 @@ namespace GTAOSuspender
             }
         }
 
-        static void ResumeProcess(int pid)
+        private static void Resume(this Process process)
         {
-            var process = Process.GetProcessById(pid);
-
             if (string.IsNullOrEmpty(process.ProcessName))
             {
                 return;
@@ -53,7 +51,7 @@ namespace GTAOSuspender
 
             foreach (ProcessThread pT in process.Threads)
             {
-                IntPtr pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
+                var pOpenThread = OpenThread(2, false, (uint)pT.Id);
 
                 if (pOpenThread == IntPtr.Zero)
                 {
@@ -70,52 +68,87 @@ namespace GTAOSuspender
             }
         }
 
-        static void Main()
+        private static void Main(string[] args)
         {
-            try
+            var help = new List<string>
             {
-                var pid = Process.GetProcessesByName("gta5")[0].Id;
+                "help",
+                "--help",
+                "-?",
+                "/?"
+            };
 
-                Console.WriteLine("Waiting 5 seconds before suspending GTA 5...");
-                Thread.Sleep(5000);
-
-                Console.WriteLine("Suspending...");
-                SuspendProcess(pid);
-
-                Console.WriteLine("Waiting 10 seconds...");
-                Thread.Sleep(10000);
-
-                Console.WriteLine("Resuming GTA 5...");
-                ResumeProcess(pid);
-
-                Console.WriteLine("Everything is complete.");
+            if (args.Length > 0 && help.Contains(args[0].ToLower()))
+            {
+                PrintHelp();
+                return;
             }
-            catch (IndexOutOfRangeException)
+            if (args.Length > 0 && args.Length < 3 && args[0].ToLower() == "repeat")
             {
-                Console.WriteLine("Please make sure GTA 5 is running. We cannot suspend something that doesn't exist ;)");
+                if (args.Length == 1 || !uint.TryParse(args[1], out var delay))
+                {
+                    delay = 15;
+                }
+
+                while (true)
+                {
+                    DoConstantSuspendAndResume();
+
+                    Console.WriteLine($"Waiting {delay} minutes...");
+                    Thread.Sleep((int)(1000000 * delay));
+                }
+            }
+
+            if (!args.Any())
+            {
+                DoConstantSuspendAndResume();
+                return;
+            }
+
+            PrintHelp();
+            Console.WriteLine("Continuing execution thinking you were to use this once.");
+            DoConstantSuspendAndResume();
+        }
+
+        private static void PrintHelp()
+        {
+            Console.WriteLine("Wrong arguments.");
+            Console.WriteLine("\"GTAOSuspender.exe\": do suspension once and close");
+            Console.WriteLine("\"GTAOSuspender.exe repeat x\": Do suspension every x minutes (Default: 15).");
+        }
+
+        private static void DoConstantSuspendAndResume()
+        {
+            restart:
+            var pList = Process.GetProcessesByName("gta5");
+            if (!pList.Any())
+            {
+                Console.WriteLine("Please make sure GTA V is running. We cannot suspend something that doesn't exist ;)");
                 Console.WriteLine("Press ESC to exit, or anything else to retry.");
 
-                if (Console.ReadKey().Key == ConsoleKey.Escape)
+                if (Console.ReadKey(true).Key == ConsoleKey.Escape)
                 {
                     return;
                 }
 
-                Main();
+                goto restart;
             }
-        }
 
-        [Flags]
-        public enum ThreadAccess
-        {
-            TERMINATE = 0x1,
-            SUSPEND_RESUME = 0x2,
-            GET_CONTEXT = 0x8,
-            SET_CONTEXT = 0x10,
-            SET_INFORMATION = 0x20,
-            QUERY_INFORMATION = 0x40,
-            SET_THREAD_TOKEN = 0x80,
-            IMPERSONATE = 0x100,
-            DIRECT_IMPERSONATION = 0x200
+            var process = pList[0];
+
+            Console.WriteLine("Waiting 5 seconds before suspending GTA V...");
+            Thread.Sleep(5000);
+
+            Console.WriteLine("Suspending...");
+            process.Suspend();
+
+            Console.WriteLine("Waiting 10 seconds...");
+            Thread.Sleep(10000);
+
+            Console.WriteLine("Resuming GTA V...");
+            process.Resume();
+
+            Console.WriteLine("Everything is complete.");
         }
     }
 }
